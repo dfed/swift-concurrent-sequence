@@ -1,4 +1,4 @@
-public struct swift_concurrent_sequence {
+public struct SwiftConcurrentSequence {
     public private(set) var text = "Hello, World!"
 
     public init() {
