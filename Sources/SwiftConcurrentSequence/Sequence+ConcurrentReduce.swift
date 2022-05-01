@@ -74,19 +74,19 @@ extension Sequence {
     /// - Parameters:
     ///   - defaultValue: A default value for Element. This value is utilized only
     ///     when the receiver is empty.
-    ///   - mergeConflictResolver: A closure that returns the desired value for
+    ///   - combine: A closure that returns the desired value for
     ///     the given key when multiple values are present for the given key.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
     public func concurrentReduce<Key, Value>(
-        mergeConflictResolver: (Key, Value, Value) -> Value)
+        combine: (Key, Value, Value) -> Value)
     -> Element
     where Element == [Key: Value]
     {
         concurrentReduce(defaultValue: Element()) { updating, next in
             for (key, nextValue) in next {
                 if let existingValue = updating[key] {
-                    updating[key] = mergeConflictResolver(key, existingValue, nextValue)
+                    updating[key] = combine(key, existingValue, nextValue)
                 } else {
                     updating[key] = nextValue
                 }
@@ -161,12 +161,12 @@ extension Sequence {
     /// - Parameters:
     ///   - defaultValue: A default value for Element. This value is utilized only
     ///     when the receiver is empty.
-    ///   - mergeConflictResolver: A closure that returns the desired value for
+    ///   - combine: A closure that returns the desired value for
     ///     the given key when multiple values are present for the given key.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
     public func concurrentReduce<Key, Value>(
-        mergeConflictResolver: @escaping (Key, Value, Value) throws -> Value)
+        combine: @escaping (Key, Value, Value) throws -> Value)
     async rethrows
     -> Element
     where Element == [Key: Value]
@@ -175,7 +175,7 @@ extension Sequence {
             var reduced = lhs
             for (key, nextValue) in rhs {
                 if let existingValue = lhs[key] {
-                    reduced[key] = try mergeConflictResolver(key, existingValue, nextValue)
+                    reduced[key] = try combine(key, existingValue, nextValue)
                 } else {
                     reduced[key] = nextValue
                 }
