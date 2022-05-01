@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+
+jobs:
+  spm:
+    name: SPM Build Xcode 13
+    runs-on: macos-11
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Select Xcode Version
+        run: sudo xcode-select --switch /Applications/Xcode_13.2.1.app/Contents/Developer
+      - name: Build and Test Framework
+        run: swift test
