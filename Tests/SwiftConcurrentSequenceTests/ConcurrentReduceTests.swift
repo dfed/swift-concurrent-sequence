@@ -19,55 +19,55 @@ import SwiftConcurrentSequence
 import XCTest
 
 final class ConcurrentReduceTests: XCTestCase {
-    func test_array_concurrentReduce() {
-        let input = Array(0 ..< 1000)
-        let output = input.concurrentReduce(defaultValue: 0) { toUpdate, next in
-            toUpdate += next
-        }
-        let expectedOutput = input.reduce(into: 0) { partialResult, next in
-            partialResult += next
-        }
+	func test_array_concurrentReduce() {
+		let input = Array(0..<1_000)
+		let output = input.concurrentReduce(defaultValue: 0) { toUpdate, next in
+			toUpdate += next
+		}
+		let expectedOutput = input.reduce(into: 0) { partialResult, next in
+			partialResult += next
+		}
 
-        XCTAssertEqual(output, expectedOutput)
-    }
+		XCTAssertEqual(output, expectedOutput)
+	}
 
-    func test_dictionary_concurrentReduce() {
-        let input = (0 ..< 1000).map {
-            (0 ... $0)
-                .reduce(into: [String: Int]()) { partialResult, next in
-                    partialResult["\(next)"] = 1
-                }
-        }
-        let output = input.concurrentReduce { _, lhs, rhs in lhs + rhs }
-        let expectedOutput = (0 ..< 1000).reduce(into: [String: Int]()) { partialResult, next in
-            partialResult["\(next)"] = 1000 - next
-        }
+	func test_dictionary_concurrentReduce() {
+		let input = (0..<1_000).map {
+			(0...$0)
+				.reduce(into: [String: Int]()) { partialResult, next in
+					partialResult["\(next)"] = 1
+				}
+		}
+		let output = input.concurrentReduce { _, lhs, rhs in lhs + rhs }
+		let expectedOutput = (0..<1_000).reduce(into: [String: Int]()) { partialResult, next in
+			partialResult["\(next)"] = 1_000 - next
+		}
 
-        XCTAssertEqual(output, expectedOutput)
-    }
+		XCTAssertEqual(output, expectedOutput)
+	}
 
-    func test_array_async_concurrentReduce() async {
-        let input = Array(0 ..< 1000)
-        let output = await input.concurrentReduce(defaultValue: 0) { lhs, rhs in lhs + rhs }
-        let expectedOutput = input.reduce(into: 0) { partialResult, next in
-            partialResult += next
-        }
+	func test_array_async_concurrentReduce() async {
+		let input = Array(0..<1_000)
+		let output = await input.concurrentReduce(defaultValue: 0) { lhs, rhs in lhs + rhs }
+		let expectedOutput = input.reduce(into: 0) { partialResult, next in
+			partialResult += next
+		}
 
-        XCTAssertEqual(output, expectedOutput)
-    }
+		XCTAssertEqual(output, expectedOutput)
+	}
 
-    func test_dictionary_async_concurrentReduce() async {
-        let input = (0 ..< 1000).map {
-            (0 ... $0)
-                .reduce(into: [String: Int]()) { partialResult, next in
-                    partialResult["\(next)"] = 1
-                }
-        }
-        let output = await input.concurrentReduce { _, lhs, rhs in lhs + rhs }
-        let expectedOutput = (0 ..< 1000).reduce(into: [String: Int]()) { partialResult, next in
-            partialResult["\(next)"] = 1000 - next
-        }
+	func test_dictionary_async_concurrentReduce() async {
+		let input = (0..<1_000).map {
+			(0...$0)
+				.reduce(into: [String: Int]()) { partialResult, next in
+					partialResult["\(next)"] = 1
+				}
+		}
+		let output = await input.concurrentReduce { _, lhs, rhs in lhs + rhs }
+		let expectedOutput = (0..<1_000).reduce(into: [String: Int]()) { partialResult, next in
+			partialResult["\(next)"] = 1_000 - next
+		}
 
-        XCTAssertEqual(output, expectedOutput)
-    }
+		XCTAssertEqual(output, expectedOutput)
+	}
 }
