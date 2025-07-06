@@ -8,12 +8,51 @@ on:
 
 jobs:
   spm:
-    name: SPM Build Xcode 13
-    runs-on: macos-11
+    name: SPM Build Xcode 16
+    runs-on: macos-15
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Select Xcode Version
-        run: sudo xcode-select --switch /Applications/Xcode_13.2.1.app/Contents/Developer
+        run: sudo xcode-select --switch /Applications/Xcode_16.app/Contents/Developer
       - name: Build and Test Framework
-        run: swift test
+        run: swift test -c release --enable-code-coverage -Xswiftc -enable-testing
+      - name: Prepare Coverage Reports
+        run: ./CLI/prepare-coverage-reports.sh
+      - name: Upload Coverage Reports
+        if: success()
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  linux:
+    name: "Build and Test on Linux"
+    runs-on: ubuntu-24.04
+    container: swift:6.0
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Build and Test Framework
+        run: swift test -c release --enable-code-coverage -Xswiftc -enable-testing
+      - name: Prepare Coverage Reports
+        run: |
+          llvm-cov export -format="lcov" .build/x86_64-unknown-linux-gnu/release/swift-concurrent-sequencePackageTests.xctest -instr-profile .build/x86_64-unknown-linux-gnu/release/codecov/default.profdata > coverage.lcov
+      - name: Upload Coverage Reports
+        if: success()
+        uses: codecov/codecov-action@v4
+  readme-validation:
+    name: Check Markdown links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Link Checker
+        uses: AlexanderDokuchaev/md-dead-link-check@v1.0.1
+  lint-swift:
+    name: Lint Swift
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Lint Swift
+        run: swift run --package-path CLI swiftformat . --lint
