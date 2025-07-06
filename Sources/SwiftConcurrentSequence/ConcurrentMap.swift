@@ -72,13 +72,12 @@ extension Array where Element: Sendable {
 		public func concurrentMap<T: Sendable>(_ transform: @Sendable (Element) -> T) -> [T] {
 			// Create a buffer where we can store the transformed output.
 			var transformed = [T?](repeating: nil, count: count)
-			let initialCollection = Array(self)
 			// Access the underlying array memory to concurrently write to indices.
 			return transformed.withUnsafeMutableBufferPointer { bufferPointer in
 				let bufferHolder = UnsafeBufferHolder(buffer: bufferPointer)
 				DispatchQueue.concurrentPerform(iterations: count) { index in
 					// It is safe to concurrently write to unique indexes of the buffer pointer.
-					bufferHolder.buffer[index] = transform(initialCollection[index])
+					bufferHolder.buffer[index] = transform(self[index])
 				}
 				return bufferPointer.compactMap(\.self)
 			}
@@ -99,9 +98,8 @@ extension Array where Element: Sendable {
 			of: IndexAndElement.self,
 			returning: [T].self
 		) { group in
-			let initialCollection = Array(self)
 			for index in 0..<count {
-				let elementAtIndex = initialCollection[index]
+				let elementAtIndex = self[index]
 				group.addTask {
 					try IndexAndElement(index: index, element: transform(elementAtIndex))
 				}
