@@ -82,10 +82,8 @@ extension Sequence where Element: Sendable {
 	/// - Returns: The final reduced value. If the sequence has no elements,
 	///   the result is `defaultValue`.
 	public func concurrentReduce<Key, Value>(
-		combine: @Sendable (Key, Value, Value) -> Value)
-		-> Element
-		where Element == [Key: Value]
-	{
+		combine: @Sendable (Key, Value, Value) -> Value
+	) -> Element where Element == [Key: Value] {
 		concurrentReduce(defaultValue: Element()) { updating, next in
 			for (key, nextValue) in next {
 				if let existingValue = updating[key] {
