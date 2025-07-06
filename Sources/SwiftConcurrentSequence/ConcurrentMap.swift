@@ -19,7 +19,41 @@
 	import Dispatch
 #endif
 
+// MARK: - Collection
+
 extension Collection where Element: Sendable {
+	#if canImport(Dispatch)
+		/// Returns an array containing the results of mapping the given closure
+		/// over the sequence's elements. The given closure is executed concurrently
+		/// on multiple queues to reduce the wall-time consumed by the transform.
+		///
+		/// - Parameter transform: A mapping closure. `transform` accepts an
+		///   element of this sequence as its parameter and returns a transformed
+		///   value of the same or of a different type.
+		/// - Returns: An array containing the transformed elements of this
+		///   sequence.
+		public func concurrentMap<T: Sendable>(_ transform: @Sendable (Element) -> T) -> [T] {
+			Array(self).concurrentMap(transform)
+		}
+	#endif
+
+	/// Returns an array containing the results of mapping the given closure
+	/// over the sequence's elements. The given closure is executed concurrently
+	/// on multiple queues to reduce the wall-time consumed by the transform.
+	///
+	/// - Parameter transform: A mapping closure. `transform` accepts an
+	///   element of this sequence as its parameter and returns a transformed
+	///   value of the same or of a different type.
+	/// - Returns: An array containing the transformed elements of this
+	///   sequence.
+	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) throws -> T) async rethrows -> [T] {
+		try await Array(self).concurrentMap(transform)
+	}
+}
+
+// MARK: - Array
+
+extension Array where Element: Sendable {
 	#if canImport(Dispatch)
 		/// Returns an array containing the results of mapping the given closure
 		/// over the sequence's elements. The given closure is executed concurrently
@@ -77,10 +111,14 @@ extension Collection where Element: Sendable {
 	}
 }
 
+// MARK: - IndexAndElement
+
 private struct IndexAndElement<Element: Sendable>: Sendable {
 	let index: Int
 	let element: Element
 }
+
+// MARK: - UnsafeBufferHolder
 
 private struct UnsafeBufferHolder<T: Sendable>: @unchecked Sendable {
 	let buffer: UnsafeMutableBufferPointer<T?>
