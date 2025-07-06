@@ -24,9 +24,7 @@
 	import Dispatch
 #endif
 
-// MARK: - Collection
-
-extension Collection where Element: Sendable {
+extension Sequence where Element: Sendable {
 	#if canImport(Dispatch)
 		/// Returns an array containing the results of mapping the given closure
 		/// over the sequence's elements. The given closure is executed concurrently
