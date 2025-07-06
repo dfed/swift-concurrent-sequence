@@ -15,10 +15,12 @@
 //  limitations under the License.
 //
 
+#if canImport(Dispatch)
 import Dispatch
+#endif
 
-extension Sequence {
-
+public extension Sequence where Element: Sendable {
+#if canImport(Dispatch)
     /// Returns the result of combining the elements of the sequence using the
     /// given closure. The given closure is executed concurrently
     /// on multiple queues to reduce the wall-time consumed by the reduction.
@@ -36,11 +38,10 @@ extension Sequence {
     ///     the caller.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
-    public func concurrentReduce(
+    func concurrentReduce(
         defaultValue: @autoclosure () -> Element,
-        reducingIntoFirst: (inout Element, Element) -> ())
-    -> Element
-    {
+        reducingIntoFirst: @Sendable (inout Element, Element) -> Void
+    ) -> Element {
         var reduced = [Element](self)
         while reduced.count > 1 {
             // We can reduce any two elements concurrently, so split the reduced array into two.
@@ -48,20 +49,22 @@ extension Sequence {
             let midpoint = reducedCount / 2
 
             // The array `toReduce` is always the same size as (or smaller by one element than) the `reduced` array.
-            let toReduce = Array(reduced[0..<midpoint])
-            reduced = Array(reduced[midpoint..<reducedCount])
+            let toReduce = Array(reduced[0 ..< midpoint])
+            reduced = Array(reduced[midpoint ..< reducedCount])
 
             // Access the underlying array memory to concurrently write to unique indices.
             reduced.withUnsafeMutableBufferPointer { bufferPointer in
+				let bufferHolder = UnsafeBufferHolder(buffer: bufferPointer)
                 // Concurrently reduce elements from `toReduce` into `reduced`.
                 DispatchQueue.concurrentPerform(iterations: toReduce.count) { index in
-                    reducingIntoFirst(&bufferPointer[index], toReduce[index])
+					reducingIntoFirst(&bufferHolder.buffer[index], toReduce[index])
                 }
             }
         }
 
         return reduced.first ?? defaultValue()
     }
+#endif
 
     /// Returns the result of combining the elements of the sequence of dictionaries
     /// using the given closure. The given closure is executed concurrently
@@ -78,10 +81,10 @@ extension Sequence {
     ///     the given key when multiple values are present for the given key.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
-    public func concurrentReduce<Key, Value>(
-        combine: (Key, Value, Value) -> Value)
-    -> Element
-    where Element == [Key: Value]
+    func concurrentReduce<Key, Value>(
+        combine: @Sendable (Key, Value, Value) -> Value)
+        -> Element
+        where Element == [Key: Value]
     {
         concurrentReduce(defaultValue: Element()) { updating, next in
             for (key, nextValue) in next {
@@ -111,12 +114,10 @@ extension Sequence {
     ///     the caller.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
-    public func concurrentReduce(
+    func concurrentReduce(
         defaultValue: @escaping @autoclosure () -> Element,
-        _ reducer: @escaping (Element, Element) throws -> Element)
-    async rethrows
-    -> Element
-    {
+        _ reducer: @escaping @Sendable (Element, Element) throws -> Element
+    ) async rethrows -> Element {
         try await withThrowingTaskGroup(of: Element.self) { group in
             var reduced = [Element](self)
             while reduced.count > 1 {
@@ -125,11 +126,11 @@ extension Sequence {
                 let midpoint = reducedCount / 2
 
                 // The array `toMidpoint` is always the same size as (or smaller by one element than) the `fromMidpoint` array.
-                let toMidpoint = Array(reduced[0..<midpoint])
-                let fromMidpoint = Array(reduced[midpoint..<reducedCount])
+                let toMidpoint = Array(reduced[0 ..< midpoint])
+                let fromMidpoint = Array(reduced[midpoint ..< reducedCount])
 
                 // Concurrently reduce elements from identical indexes on both arrays.
-                for index in 0..<toMidpoint.count {
+                for index in 0 ..< toMidpoint.count {
                     group.addTask {
                         try reducer(toMidpoint[index], fromMidpoint[index])
                     }
@@ -165,12 +166,9 @@ extension Sequence {
     ///     the given key when multiple values are present for the given key.
     /// - Returns: The final reduced value. If the sequence has no elements,
     ///   the result is `defaultValue`.
-    public func concurrentReduce<Key, Value>(
-        combine: @escaping (Key, Value, Value) throws -> Value)
-    async rethrows
-    -> Element
-    where Element == [Key: Value]
-    {
+    func concurrentReduce<Key, Value>(
+        combine: @escaping @Sendable (Key, Value, Value) throws -> Value
+	) async rethrows -> Element where Element == [Key: Value] {
         try await concurrentReduce(defaultValue: Element()) { lhs, rhs in
             var reduced = lhs
             for (key, nextValue) in rhs {
@@ -183,5 +181,8 @@ extension Sequence {
             return reduced
         }
     }
+}
 
+private struct UnsafeBufferHolder<T: Sendable>: @unchecked Sendable {
+	let buffer: UnsafeMutableBufferPointer<T>
 }
