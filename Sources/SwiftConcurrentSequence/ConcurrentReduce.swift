@@ -186,7 +186,7 @@ extension Sequence where Element: Sendable {
 	}
 }
 
-// MARK - UnsafeBufferHolder
+// MARK: - UnsafeBufferHolder
 
 private struct UnsafeBufferHolder<T: Sendable>: @unchecked Sendable {
 	let buffer: UnsafeMutableBufferPointer<T>
