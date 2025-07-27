@@ -21,10 +21,11 @@
 // SOFTWARE.
 
 import SwiftConcurrentSequence
-import XCTest
+import Testing
 
-final class ConcurrentReduceTests: XCTestCase {
-	func test_array_concurrentReduce() {
+struct ConcurrentReduceTests {
+	@Test
+	func array_concurrentReduce() {
 		let input = Array(0..<1_000)
 		let output = input.concurrentReduce(defaultValue: 0) { toUpdate, next in
 			toUpdate += next
@@ -33,10 +34,11 @@ final class ConcurrentReduceTests: XCTestCase {
 			partialResult += next
 		}
 
-		XCTAssertEqual(output, expectedOutput)
+		#expect(output == expectedOutput)
 	}
 
-	func test_dictionary_concurrentReduce() {
+	@Test
+	func dictionary_concurrentReduce() {
 		let input = (0..<1_000).map {
 			(0...$0)
 				.reduce(into: [String: Int]()) { partialResult, next in
@@ -48,20 +50,22 @@ final class ConcurrentReduceTests: XCTestCase {
 			partialResult["\(next)"] = 1_000 - next
 		}
 
-		XCTAssertEqual(output, expectedOutput)
+		#expect(output == expectedOutput)
 	}
 
-	func test_array_async_concurrentReduce() async {
+	@Test
+	func array_async_concurrentReduce() async {
 		let input = Array(0..<1_000)
 		let output = await input.concurrentReduce(defaultValue: 0) { lhs, rhs in lhs + rhs }
 		let expectedOutput = input.reduce(into: 0) { partialResult, next in
 			partialResult += next
 		}
 
-		XCTAssertEqual(output, expectedOutput)
+		#expect(output == expectedOutput)
 	}
 
-	func test_dictionary_async_concurrentReduce() async {
+	@Test
+	func dictionary_async_concurrentReduce() async {
 		let input = (0..<1_000).map {
 			(0...$0)
 				.reduce(into: [String: Int]()) { partialResult, next in
@@ -73,6 +77,6 @@ final class ConcurrentReduceTests: XCTestCase {
 			partialResult["\(next)"] = 1_000 - next
 		}
 
-		XCTAssertEqual(output, expectedOutput)
+		#expect(output == expectedOutput)
 	}
 }

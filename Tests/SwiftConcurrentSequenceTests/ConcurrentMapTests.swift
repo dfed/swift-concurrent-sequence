@@ -21,38 +21,30 @@
 // SOFTWARE.
 
 import SwiftConcurrentSequence
-import XCTest
+import Testing
 
-final class ConcurrentMapTests: XCTestCase {
-	func test_array_concurrentMap() {
+struct ConcurrentMapTests {
+	@Test
+	func array_concurrentMap() {
 		let output = Array(0..<10_000).concurrentMap { $0 + 1 }
-		XCTAssertEqual(
-			output,
-			Array(1..<10_001)
-		)
+		#expect(output == Array(1..<10_001))
 	}
 
-	func test_set_concurrentMap() {
+	@Test
+	func set_concurrentMap() {
 		let output = Set(Set(0..<10_000).concurrentMap { $0 + 1 })
-		XCTAssertEqual(
-			output,
-			Set(1..<10_001)
-		)
+		#expect(output == Set(1..<10_001))
 	}
 
-	func test_array_async_concurrentMap() async {
+	@Test
+	func array_async_concurrentMap() async {
 		let output = await Array(0..<10_000).concurrentMap { $0 + 1 }
-		XCTAssertEqual(
-			output,
-			Array(1..<10_001)
-		)
+		#expect(output == Array(1..<10_001))
 	}
 
-	func test_set_async_concurrentMap() async {
+	@Test
+	func set_async_concurrentMap() async {
 		let output = await Set(Set(0..<10_000).concurrentMap { $0 + 1 })
-		XCTAssertEqual(
-			output,
-			Set(1..<10_001)
-		)
+		#expect(output == Set(1..<10_001))
 	}
 }
