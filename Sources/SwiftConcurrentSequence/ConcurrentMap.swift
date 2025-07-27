@@ -49,6 +49,7 @@ extension Sequence where Element: Sendable {
 	///   value of the same or of a different type.
 	/// - Returns: An array containing the transformed elements of this
 	///   sequence.
+	@_disfavoredOverload
 	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await Array(self).concurrentMap(transform)
 	}
@@ -91,6 +92,7 @@ extension Array where Element: Sendable {
 	///   value of the same or of a different type.
 	/// - Returns: An array containing the transformed elements of this
 	///   sequence.
+	@_disfavoredOverload
 	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await withThrowingTaskGroup(
 			of: IndexAndElement.self,
