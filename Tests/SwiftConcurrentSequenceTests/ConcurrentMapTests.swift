@@ -38,7 +38,8 @@ struct ConcurrentMapTests {
 
 	@Test
 	func array_async_concurrentMap() async {
-		@Sendable func add(_ lhs: Int, _ rhs: Int) async -> Int {
+		@Sendable
+		func add(_ lhs: Int, _ rhs: Int) async -> Int {
 			lhs + rhs
 		}
 		let output = await Array(0..<10_000).concurrentMap { await add($0, 1) }
@@ -47,7 +48,8 @@ struct ConcurrentMapTests {
 
 	@Test
 	func set_async_concurrentMap() async {
-		@Sendable func add(_ lhs: Int, _ rhs: Int) async -> Int {
+		@Sendable
+		func add(_ lhs: Int, _ rhs: Int) async -> Int {
 			lhs + rhs
 		}
 		let output = await Set(Set(0..<10_000).concurrentMap { await add($0, 1) })
