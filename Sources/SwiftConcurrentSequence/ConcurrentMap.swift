@@ -49,7 +49,7 @@ extension Sequence where Element: Sendable {
 	///   value of the same or of a different type.
 	/// - Returns: An array containing the transformed elements of this
 	///   sequence.
-	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) throws -> T) async rethrows -> [T] {
+	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await Array(self).concurrentMap(transform)
 	}
 }
@@ -91,7 +91,7 @@ extension Array where Element: Sendable {
 	///   value of the same or of a different type.
 	/// - Returns: An array containing the transformed elements of this
 	///   sequence.
-	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) throws -> T) async rethrows -> [T] {
+	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await withThrowingTaskGroup(
 			of: IndexAndElement.self,
 			returning: [T].self
@@ -99,7 +99,7 @@ extension Array where Element: Sendable {
 			for index in 0..<count {
 				let elementAtIndex = self[index]
 				group.addTask {
-					try IndexAndElement(index: index, element: transform(elementAtIndex))
+					try await IndexAndElement(index: index, element: transform(elementAtIndex))
 				}
 			}
 

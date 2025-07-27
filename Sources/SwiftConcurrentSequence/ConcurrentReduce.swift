@@ -119,7 +119,7 @@ extension Sequence where Element: Sendable {
 	///   the result is `defaultValue`.
 	public func concurrentReduce(
 		defaultValue: @escaping @autoclosure () -> Element,
-		_ reducer: @escaping @Sendable (Element, Element) throws -> Element
+		_ reducer: @escaping @Sendable (Element, Element) async throws -> Element
 	) async rethrows -> Element {
 		try await withThrowingTaskGroup(of: Element.self) { group in
 			var reduced = [Element](self)
@@ -135,7 +135,7 @@ extension Sequence where Element: Sendable {
 				// Concurrently reduce elements from identical indexes on both arrays.
 				for index in 0..<toMidpoint.count {
 					group.addTask {
-						try reducer(toMidpoint[index], fromMidpoint[index])
+						try await reducer(toMidpoint[index], fromMidpoint[index])
 					}
 				}
 
