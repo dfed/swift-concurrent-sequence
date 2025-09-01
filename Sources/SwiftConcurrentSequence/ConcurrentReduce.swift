@@ -69,36 +69,36 @@ extension Sequence where Element: Sendable {
 
 			return reduced.first ?? defaultValue()
 		}
-	#endif
 
-	/// Returns the result of combining the elements of the sequence of dictionaries
-	/// using the given closure. The given closure is executed concurrently
-	/// on multiple queues to reduce the wall-time consumed by the reduction.
-	///
-	/// Use the `reduce(into:_:)` method to produce a single value from the
-	/// elements of an entire sequence. For example, you can use this method on an
-	/// array of integers to filter adjacent equal entries or count frequencies.
-	///
-	/// - Parameters:
-	///   - defaultValue: A default value for Element. This value is utilized only
-	///     when the receiver is empty.
-	///   - combine: A closure that returns the desired value for
-	///     the given key when multiple values are present for the given key.
-	/// - Returns: The final reduced value. If the sequence has no elements,
-	///   the result is `defaultValue`.
-	public func concurrentReduce<Key, Value>(
-		combine: @Sendable (Key, Value, Value) -> Value
-	) -> Element where Element == [Key: Value] {
-		concurrentReduce(defaultValue: Element()) { updating, next in
-			for (key, nextValue) in next {
-				if let existingValue = updating[key] {
-					updating[key] = combine(key, existingValue, nextValue)
-				} else {
-					updating[key] = nextValue
+		/// Returns the result of combining the elements of the sequence of dictionaries
+		/// using the given closure. The given closure is executed concurrently
+		/// on multiple queues to reduce the wall-time consumed by the reduction.
+		///
+		/// Use the `reduce(into:_:)` method to produce a single value from the
+		/// elements of an entire sequence. For example, you can use this method on an
+		/// array of integers to filter adjacent equal entries or count frequencies.
+		///
+		/// - Parameters:
+		///   - defaultValue: A default value for Element. This value is utilized only
+		///     when the receiver is empty.
+		///   - combine: A closure that returns the desired value for
+		///     the given key when multiple values are present for the given key.
+		/// - Returns: The final reduced value. If the sequence has no elements,
+		///   the result is `defaultValue`.
+		public func concurrentReduce<Key, Value>(
+			combine: @Sendable (Key, Value, Value) -> Value
+		) -> Element where Element == [Key: Value] {
+			concurrentReduce(defaultValue: Element()) { updating, next in
+				for (key, nextValue) in next {
+					if let existingValue = updating[key] {
+						updating[key] = combine(key, existingValue, nextValue)
+					} else {
+						updating[key] = nextValue
+					}
 				}
 			}
 		}
-	}
+	#endif
 
 	/// Returns the result of combining the elements of the sequence using the
 	/// given closure. The given closure is executed concurrently
