@@ -30,9 +30,17 @@ extension Sequence where Element: Sendable {
 		/// given closure. The given closure is executed concurrently
 		/// on multiple queues to reduce the wall-time consumed by the reduction.
 		///
-		/// Use the `reduce(into:_:)` method to produce a single value from the
-		/// elements of an entire sequence. For example, you can use this method on an
-		/// array of integers to filter adjacent equal entries or count frequencies.
+		/// This synchronous method uses Grand Central Dispatch to parallelize the reduction
+		/// by recursively combining pairs of elements until a single result remains.
+		///
+		/// Example:
+		/// ```swift
+		/// let numbers = [1, 2, 3, 4, 5]
+		/// let sum = numbers.concurrentReduce(defaultValue: 0) { accumulator, value in
+		///     accumulator += value
+		/// }
+		/// // Result: 15
+		/// ```
 		///
 		/// - Parameters:
 		///   - defaultValue: A default value for Element. This value is utilized only
@@ -74,17 +82,24 @@ extension Sequence where Element: Sendable {
 		/// using the given closure. The given closure is executed concurrently
 		/// on multiple queues to reduce the wall-time consumed by the reduction.
 		///
-		/// Use the `reduce(into:_:)` method to produce a single value from the
-		/// elements of an entire sequence. For example, you can use this method on an
-		/// array of integers to filter adjacent equal entries or count frequencies.
+		/// This specialized method merges dictionaries with custom conflict resolution
+		/// for duplicate keys.
 		///
-		/// - Parameters:
-		///   - defaultValue: A default value for Element. This value is utilized only
-		///     when the receiver is empty.
-		///   - combine: A closure that returns the desired value for
-		///     the given key when multiple values are present for the given key.
-		/// - Returns: The final reduced value. If the sequence has no elements,
-		///   the result is `defaultValue`.
+		/// Example:
+		/// ```swift
+		/// let dictionaries = [
+		///     ["apple": 1, "banana": 2],
+		///     ["apple": 3, "cherry": 5]
+		/// ]
+		/// let merged = dictionaries.concurrentReduce { key, first, second in
+		///     return first + second // Sum values for duplicate keys
+		/// }
+		/// // Result: ["apple": 4, "banana": 2, "cherry": 5]
+		/// ```
+		///
+		/// - Parameter combine: A closure that returns the desired value for
+		///   the given key when multiple values are present for the given key.
+		/// - Returns: The final reduced dictionary.
 		public func concurrentReduce<Key, Value>(
 			combine: @Sendable (Key, Value, Value) -> Value
 		) -> Element where Element == [Key: Value] {
@@ -101,20 +116,24 @@ extension Sequence where Element: Sendable {
 	#endif
 
 	/// Returns the result of combining the elements of the sequence using the
-	/// given closure. The given closure is executed concurrently
-	/// on multiple queues to reduce the wall-time consumed by the reduction.
+	/// given async closure. The given closure is executed concurrently
+	/// using Swift's structured concurrency to reduce wall-time.
 	///
-	/// Use the `reduce(into:_:)` method to produce a single value from the
-	/// elements of an entire sequence. For example, you can use this method on an
-	/// array of integers to filter adjacent equal entries or count frequencies.
+	/// This asynchronous method uses task groups to parallelize the reduction
+	/// by recursively combining pairs of elements until a single result remains.
+	///
+	/// Example:
+	/// ```swift
+	/// let files: [URL] = […]
+	/// let mergedFileContents = await endpoints.concurrentReduce(defaultValue: FileContents()) { accumulated, file in
+	///     try await accumulated.merge(readData(from: file))
+	/// }
+	/// ```
 	///
 	/// - Parameters:
 	///   - defaultValue: A default value for Element. This value is utilized only
 	///     when the receiver is empty.
-	///   - reducingIntoFirst: A closure that combines an accumulating value and
-	///     an element of the sequence into a new reduced value, to be used
-	///     in the next call of the `reducingIntoFirst` closure or returned to
-	///     the caller.
+	///   - reducer: A closure that combines two elements into a new reduced value.
 	/// - Returns: The final reduced value. If the sequence has no elements,
 	///   the result is `defaultValue`.
 	public func concurrentReduce(
@@ -155,20 +174,24 @@ extension Sequence where Element: Sendable {
 	}
 
 	/// Returns the result of combining the elements of the sequence of dictionaries
-	/// using the given closure. The given closure is executed concurrently
-	/// on multiple queues to reduce the wall-time consumed by the reduction.
+	/// using the given async closure. The given closure is executed concurrently
+	/// using Swift's structured concurrency to reduce wall-time.
 	///
-	/// Use the `reduce(into:_:)` method to produce a single value from the
-	/// elements of an entire sequence. For example, you can use this method on an
-	/// array of integers to filter adjacent equal entries or count frequencies.
+	/// This specialized async method merges dictionaries with custom conflict resolution
+	/// for duplicate keys.
 	///
-	/// - Parameters:
-	///   - defaultValue: A default value for Element. This value is utilized only
-	///     when the receiver is empty.
-	///   - combine: A closure that returns the desired value for
-	///     the given key when multiple values are present for the given key.
-	/// - Returns: The final reduced value. If the sequence has no elements,
-	///   the result is `defaultValue`.
+	/// Example:
+	/// ```swift
+	/// let userGroups = await fetchUserGroups() // Returns [[String: User]]
+	/// let mergedUsers = await userGroups.concurrentReduce { key, user1, user2 in
+	///     // Custom logic to merge duplicate users
+	///     return user1.updatedAt > user2.updatedAt ? user1 : user2
+	/// }
+	/// ```
+	///
+	/// - Parameter combine: A closure that returns the desired value for
+	///   the given key when multiple values are present for the given key.
+	/// - Returns: The final reduced dictionary.
 	public func concurrentReduce<Key, Value>(
 		combine: @escaping @Sendable (Key, Value, Value) throws -> Value
 	) async rethrows -> Element where Element == [Key: Value] {
