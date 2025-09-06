@@ -30,25 +30,38 @@ extension Sequence where Element: Sendable {
 		/// over the sequence's elements. The given closure is executed concurrently
 		/// on multiple queues to reduce the wall-time consumed by the transform.
 		///
+		/// Example:
+		/// ```swift
+		/// let numbers = [1, 2, 3, 4, 5]
+		/// let squared = numbers.concurrentMap { $0 * $0 }
+		/// // Result: [1, 4, 9, 16, 25]
+		/// ```
+		///
 		/// - Parameter transform: A mapping closure. `transform` accepts an
 		///   element of this sequence as its parameter and returns a transformed
 		///   value of the same or of a different type.
-		/// - Returns: An array containing the transformed elements of this
-		///   sequence.
+		/// - Returns: An array containing the transformed elements of this sequence in their original order.
 		public func concurrentMap<T: Sendable>(_ transform: @Sendable (Element) -> T) -> [T] {
 			Array(self).concurrentMap(transform)
 		}
 	#endif
 
-	/// Returns an array containing the results of mapping the given closure
+	/// Returns an array containing the results of mapping the given async closure
 	/// over the sequence's elements. The given closure is executed concurrently
-	/// on multiple queues to reduce the wall-time consumed by the transform.
+	/// using Swift's structured concurrency to reduce wall-time.
 	///
-	/// - Parameter transform: A mapping closure. `transform` accepts an
+	/// Example:
+	/// ```swift
+	/// let urls = ["url1", "url2", "url3"]
+	/// let responses = await urls.concurrentMap { url in
+	///     try await fetchData(from: url)
+	/// }
+	/// ```
+	///
+	/// - Parameter transform: An async mapping closure. `transform` accepts an
 	///   element of this sequence as its parameter and returns a transformed
 	///   value of the same or of a different type.
-	/// - Returns: An array containing the transformed elements of this
-	///   sequence.
+	/// - Returns: An array containing the transformed elements of this sequence in their original order.
 	@_disfavoredOverload
 	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await Array(self).concurrentMap(transform)
@@ -63,11 +76,17 @@ extension Array where Element: Sendable {
 		/// over the sequence's elements. The given closure is executed concurrently
 		/// on multiple queues to reduce the wall-time consumed by the transform.
 		///
+		/// Example:
+		/// ```swift
+		/// let numbers = [1, 2, 3, 4, 5]
+		/// let squared = numbers.concurrentMap { $0 * $0 }
+		/// // Result: [1, 4, 9, 16, 25]
+		/// ```
+		///
 		/// - Parameter transform: A mapping closure. `transform` accepts an
 		///   element of this sequence as its parameter and returns a transformed
 		///   value of the same or of a different type.
-		/// - Returns: An array containing the transformed elements of this
-		///   sequence.
+		/// - Returns: An array containing the transformed elements of this sequence in their original order.
 		public func concurrentMap<T: Sendable>(_ transform: @Sendable (Element) -> T) -> [T] {
 			// Create a buffer where we can store the transformed output.
 			var transformed = [T?](repeating: nil, count: count)
@@ -83,15 +102,22 @@ extension Array where Element: Sendable {
 		}
 	#endif
 
-	/// Returns an array containing the results of mapping the given closure
+	/// Returns an array containing the results of mapping the given async closure
 	/// over the sequence's elements. The given closure is executed concurrently
-	/// on multiple queues to reduce the wall-time consumed by the transform.
+	/// using Swift's structured concurrency to reduce wall-time.
 	///
-	/// - Parameter transform: A mapping closure. `transform` accepts an
+	/// Example:
+	/// ```swift
+	/// let endpoints: [URL] = […]
+	/// let responses = await endpoints.concurrentMap { url in
+	///     try await fetchData(from: url)
+	/// }
+	/// ```
+	///
+	/// - Parameter transform: An async mapping closure. `transform` accepts an
 	///   element of this sequence as its parameter and returns a transformed
 	///   value of the same or of a different type.
-	/// - Returns: An array containing the transformed elements of this
-	///   sequence.
+	/// - Returns: An array containing the transformed elements of this sequence in their original order.
 	@_disfavoredOverload
 	public func concurrentMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T) async rethrows -> [T] {
 		try await withThrowingTaskGroup(

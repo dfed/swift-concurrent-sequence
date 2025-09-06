@@ -13,21 +13,21 @@ let package = Package(
 	],
 	products: [
 		.library(
-			name: "SwiftConcurrentSequence",
-			targets: ["SwiftConcurrentSequence"]
+			name: "ConcurrentSequence",
+			targets: ["ConcurrentSequence"]
 		),
 	],
 	targets: [
 		.target(
-			name: "SwiftConcurrentSequence",
+			name: "ConcurrentSequence",
 			dependencies: [],
 			swiftSettings: [
 				.swiftLanguageMode(.v6),
 			]
 		),
 		.testTarget(
-			name: "SwiftConcurrentSequenceTests",
-			dependencies: ["SwiftConcurrentSequence"],
+			name: "ConcurrentSequenceTests",
+			dependencies: ["ConcurrentSequence"],
 			swiftSettings: [
 				.swiftLanguageMode(.v6),
 			]
